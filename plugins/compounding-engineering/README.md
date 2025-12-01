@@ -6,8 +6,8 @@ AI-powered development tools that get smarter with every use. Make each unit of 
 
 | Component | Count |
 |-----------|-------|
-| Agents | 23 |
-| Commands | 16 |
+| Agents | 26 |
+| Commands | 21 |
 | Skills | 11 |
 | MCP Servers | 2 |
 
@@ -47,11 +47,13 @@ Agents are organized into categories for easier discovery.
 | `design-iterator` | Iteratively refine UI through systematic design iterations |
 | `figma-design-sync` | Synchronize web implementations with Figma designs |
 
-### Workflow (5)
+### Workflow (7)
 
 | Agent | Description |
 |-------|-------------|
 | `bug-reproduction-validator` | Systematically reproduce and validate bug reports |
+| `clean-state-verifier` | Ensure environment is in a clean state before ending a session |
+| `e2e-test-verifier` | Verify features work end-to-end using browser automation |
 | `every-style-editor` | Edit content to conform to Every's style guide |
 | `lint` | Run linting and code quality checks on Ruby and ERB files |
 | `pr-comment-resolver` | Address PR comments and implement fixes |
@@ -71,9 +73,11 @@ Core workflow commands (use the short form for autocomplete):
 
 | Command | Description |
 |---------|-------------|
-| `/plan` | Create implementation plans |
+| `/plan` | Create implementation plans with task JSON for tracking |
 | `/review` | Run comprehensive code reviews |
-| `/work` | Execute work items systematically |
+| `/work` | Make incremental progress on a task, one feature at a time |
+| `/work-init` | Initialize Claude agent environment for a project |
+| `/task-status` | Show progress on a task |
 | `/compound` | Document solved problems to compound team knowledge |
 
 ### Utility Commands
@@ -157,6 +161,70 @@ Core workflow commands (use the short form for autocomplete):
 Supports 100+ frameworks including Rails, React, Next.js, Vue, Django, Laravel, and more.
 
 MCP servers start automatically when the plugin is enabled.
+
+## Long-Running Agent Support
+
+This plugin implements best practices from [Anthropic's research on effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents).
+
+### The Problem
+
+AI agents working on complex tasks across multiple sessions face challenges:
+- Context window limits force work to span multiple sessions
+- Each new session starts with no memory of previous work
+- Agents tend to "one-shot" complex features, leaving half-implemented code
+- Agents may declare victory prematurely
+
+### The Solution
+
+This plugin provides structured persistence across sessions:
+
+```
+.claude/
+├── progress.txt           # Append-only session log
+├── init.sh                # Quick dev environment startup
+└── tasks/
+    └── [task-slug].json   # Feature breakdown with pass/fail tracking
+```
+
+### Workflow
+
+1. **Initialize once per project:**
+   ```
+   /compounding-engineering:work-init
+   ```
+
+2. **Plan a feature (creates GitHub issue + task JSON):**
+   ```
+   /compounding-engineering:plan "Add user avatars with S3 upload"
+   ```
+
+3. **Work incrementally (one sub-feature at a time):**
+   ```
+   /compounding-engineering:work user-avatars
+   ```
+
+   Each session:
+   - Reads progress file to understand context
+   - Picks ONE sub-feature to implement
+   - Tests end-to-end before marking complete
+   - Commits and updates progress file
+
+4. **Check status anytime:**
+   ```
+   /compounding-engineering:task-status user-avatars
+   ```
+
+5. **Review when complete:**
+   ```
+   /compounding-engineering:review
+   ```
+
+### Key Principles
+
+- **Incremental progress**: One feature at a time prevents half-implemented chaos
+- **Structured handoff**: JSON + progress file enables seamless session transitions
+- **Forced verification**: Features must be tested E2E before marking complete
+- **Clean state**: Every session ends with committed, working code
 
 ## Installation
 

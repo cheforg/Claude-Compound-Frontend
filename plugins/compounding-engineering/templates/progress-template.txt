@@ -1,0 +1,51 @@
+# Claude Agent Progress Log
+#
+# This file tracks work across multiple agent sessions.
+# Each session appends to this file - NEVER DELETE ENTRIES.
+#
+# ============================================================
+# FORMAT GUIDE
+# ============================================================
+#
+# Each entry follows this structure:
+#
+# ---
+# Date: [ISO 8601 timestamp, e.g., 2025-11-30T14:30:00Z]
+# Task: [task-slug from .claude/tasks/ or "general" for non-task work]
+# Feature: [feature-id] - [brief description] (omit if not working on specific feature)
+# Status: [completed|in-progress|blocked]
+# Changes:
+# - [Bullet point describing what was done]
+# - [Another bullet point]
+# - [Keep it concise but informative]
+# Git commits: [comma-separated commit hashes]
+# Next steps: [What the next session should do]
+# Issues: [Any bugs, blockers, or concerns - or "None"]
+# ---
+#
+# ============================================================
+# RULES
+# ============================================================
+#
+# 1. NEVER delete or modify previous entries
+# 2. ALWAYS add a new entry at the END of the file
+# 3. Be specific about what was done and what's next
+# 4. Include commit hashes for traceability
+# 5. Note any issues even if they seem minor
+#
+# ============================================================
+# LOG STARTS BELOW
+# ============================================================
+
+---
+Date: [TIMESTAMP]
+Task: project-init
+Feature: N/A
+Status: completed
+Changes:
+- Initialized Claude agent environment
+- Created progress.txt, init.sh, and tasks/ directory
+Git commits: [HASH]
+Next steps: Create first task with /plan command
+Issues: None
+---

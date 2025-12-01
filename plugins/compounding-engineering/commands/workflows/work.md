@@ -1,275 +1,255 @@
 ---
 name: work
-description: Execute work plans efficiently while maintaining quality and finishing features
-argument-hint: "[plan file, specification, or todo file path]"
+description: Make incremental progress on a task, one feature at a time
+argument-hint: "[task slug or path to task JSON file]"
 ---
 
-# Work Plan Execution Command
+# Incremental Work Session
 
-Execute a work plan efficiently while maintaining quality and finishing features.
+You are a coding agent working on a long-running task. Your job is to make INCREMENTAL progress - completing exactly ONE sub-feature per work session, then leaving the environment in a clean state for the next session.
 
-## Introduction
+## Input
 
-This command takes a work document (plan, specification, or todo file) and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+<task_input> #$ARGUMENTS </task_input>
 
-## Input Document
+If the input is empty, list available tasks:
+```bash
+ls .claude/tasks/*.json 2>/dev/null || echo "No tasks found. Run /plan first to create a task."
+```
 
-<input_document> #$ARGUMENTS </input_document>
+## CRITICAL RULES
 
-## Execution Workflow
+1. **ONE FEATURE AT A TIME**: You MUST only work on a single sub-feature per session. Do not attempt multiple features.
 
-### Phase 1: Quick Start
+2. **VERIFY BEFORE MARKING COMPLETE**: Never mark a feature as `"passes": true` without end-to-end testing. Use Playwright/browser automation for UI features.
 
-1. **Read Plan and Clarify**
+3. **CLEAN STATE**: Before ending, ensure:
+   - All changes are committed with descriptive messages
+   - Progress file is updated
+   - Task JSON is updated (only the `passes` field)
+   - Tests pass
+   - Dev server runs cleanly
 
-   - Read the work document completely
-   - Review any references or links provided in the plan
-   - If anything is unclear or ambiguous, ask clarifying questions now
-   - Get user approval to proceed
-   - **Do not skip this** - better to ask questions now than build the wrong thing
+4. **NEVER MODIFY FEATURE DESCRIPTIONS**: You may ONLY change the `passes` field from `false` to `true`. Never edit descriptions, steps, or delete features.
 
-2. **Setup Environment**
+## Session Flow
 
-   Choose your work style:
+### Phase 1: Orientation (ALWAYS DO THIS FIRST)
 
-   **Option A: Live work on current branch**
-   ```bash
-   git checkout main && git pull origin main
-   git checkout -b feature-branch-name
-   ```
+Run these commands in order:
 
-   **Option B: Parallel work with worktree (recommended for parallel development)**
-   ```bash
-   # Ask user first: "Work in parallel with worktree or on current branch?"
-   # If worktree:
-   skill: git-worktree
-   # The skill will create a new branch from main in an isolated worktree
-   ```
+```bash
+# 1. Confirm working directory
+pwd
 
-   **Recommendation**: Use worktree if:
-   - You want to work on multiple features simultaneously
-   - You want to keep main clean while experimenting
-   - You plan to switch between branches frequently
+# 2. Read recent progress
+cat .claude/progress.txt | tail -50
 
-   Use live branch if:
-   - You're working on a single feature
-   - You prefer staying in the main repository
+# 3. Read the task file
+cat .claude/tasks/$TASK.json
 
-3. **Create Todo List**
-   - Use TodoWrite to break plan into actionable tasks
-   - Include dependencies between tasks
-   - Prioritize based on what needs to be done first
-   - Include testing and quality check tasks
-   - Keep tasks specific and completable
+# 4. Find the next incomplete feature
+cat .claude/tasks/$TASK.json | jq -r '.features[] | select(.passes == false) | "\(.priority): \(.id) - \(.description)"' | head -5
 
-### Phase 2: Execute
+# 5. Check recent git history
+git log --oneline -10
 
-1. **Task Execution Loop**
+# 6. Start the development environment
+./.claude/init.sh
 
-   For each task in priority order:
+# 7. Run smoke test to verify app works
+# (customize based on project - e.g., curl health endpoint, run basic test)
+```
 
-   ```
-   while (tasks remain):
-     - Mark task as in_progress in TodoWrite
-     - Read any referenced files from the plan
-     - Look for similar patterns in codebase
-     - Implement following existing conventions
-     - Write tests for new functionality
-     - Run tests after changes
-     - Mark task as completed
-   ```
+### Phase 2: Select ONE Feature
 
-2. **Follow Existing Patterns**
+From the incomplete features, select the one with the LOWEST priority number (highest priority).
 
-   - The plan should reference similar code - read those files first
-   - Match naming conventions exactly
-   - Reuse existing components where possible
-   - Follow project coding standards (see CLAUDE.md)
-   - When in doubt, grep for similar implementations
+Announce your selection:
+```
+Working on: [feature-id] - [description]
+Priority: [N]
+Category: [category]
+```
 
-3. **Test Continuously**
+### Phase 3: Implement the Feature
 
-   - Run relevant tests after each significant change
-   - Don't wait until the end to test
-   - Fix failures immediately
-   - Add new tests for new functionality
+1. Read any relevant existing code first
+2. Implement the feature following project conventions
+3. Write or update tests as needed
+4. Keep changes focused - don't refactor unrelated code
 
-4. **Figma Design Sync** (if applicable)
+### Phase 4: Verify the Feature
 
-   For UI work with Figma designs:
+**For backend/API features:**
+```bash
+# Run relevant tests
+npm test -- --grep "[feature-name]"
 
-   - Implement components following design specs
-   - Use figma-design-sync agent iteratively to compare
-   - Fix visual differences identified
-   - Repeat until implementation matches design
+# Test the endpoint manually
+curl -X POST http://localhost:3000/api/...
+```
 
-5. **Track Progress**
-   - Keep TodoWrite updated as you complete tasks
-   - Note any blockers or unexpected discoveries
-   - Create new tasks if scope expands
-   - Keep user informed of major milestones
+**For UI features - USE PLAYWRIGHT MCP:**
+```
+Use the Playwright MCP to:
+1. Navigate to the relevant page
+2. Perform each step listed in the feature's "steps" array
+3. Take screenshots as evidence
+4. Verify the expected behavior occurs
+```
 
-### Phase 3: Quality Check
+**IMPORTANT**: Only mark as passing if ALL verification steps succeed.
 
-1. **Run Core Quality Checks**
+### Phase 5: Update State and Commit
 
-   Always run before submitting:
+1. **Commit the changes:**
+```bash
+git add -A
+git commit -m "feat([task-slug]): [description] ([feature-id])
 
-   ```bash
-   # Run full test suite
-   bin/rails test
+- [Bullet point of what was implemented]
+- [Another bullet point]
 
-   # Run linting (per CLAUDE.md)
-   # Use linting-agent before pushing to origin
-   ```
+Closes [feature-id]"
+```
 
-2. **Consider Reviewer Agents** (Optional)
+2. **Update the task JSON:**
+Change ONLY the `passes` field for the completed feature:
+```json
+{
+  "id": "[feature-id]",
+  "passes": true,  // ← Change this from false to true
+  ...
+}
+```
 
-   Use for complex, risky, or large changes:
+3. **Update progress.txt:**
+Append a new entry:
+```
+---
+Date: [CURRENT_TIMESTAMP]
+Task: [task-slug]
+Feature: [feature-id] - [description]
+Status: completed
+Changes:
+- [What you implemented]
+- [What you tested]
+Git commits: [commit-hash]
+Next steps: [Next feature-id] - [Next description]
+Issues: [Any bugs or concerns discovered, or "None"]
+---
+```
 
-   - **code-simplicity-reviewer**: Check for unnecessary complexity
-   - **kieran-rails-reviewer**: Verify Rails conventions (Rails projects)
-   - **performance-oracle**: Check for performance issues
-   - **security-sentinel**: Scan for security vulnerabilities
-   - **cora-test-reviewer**: Review test quality (CORA projects)
+4. **Commit the state updates:**
+```bash
+git add .claude/
+git commit -m "chore: update progress for [feature-id]"
+```
 
-   Run reviewers in parallel with Task tool:
+### Phase 6: End Session or Continue
 
-   ```
-   Task(code-simplicity-reviewer): "Review changes for simplicity"
-   Task(kieran-rails-reviewer): "Check Rails conventions"
-   ```
+Check if there are more features:
+```bash
+cat .claude/tasks/$TASK.json | jq '[.features[] | select(.passes == false)] | length'
+```
 
-   Present findings to user and address critical issues.
+- If 0 remaining: Announce "All features complete! Ready for /review"
+- If >0 remaining: Either continue to next feature OR end session cleanly
 
-3. **Final Validation**
-   - All TodoWrite tasks marked completed
-   - All tests pass
-   - Linting passes
-   - Code follows existing patterns
-   - Figma designs match (if applicable)
-   - No console errors or warnings
+If ending the session, summarize:
+```
+Session complete.
+- Completed: [feature-id]
+- Remaining: [N] features
+- Next up: [next-feature-id] - [description]
+```
 
-### Phase 4: Ship It
+## Handling Broken State
 
-1. **Create Commit**
+If the smoke test fails during orientation:
 
-   ```bash
-   git add .
-   git status  # Review what's being committed
-   git diff --staged  # Check the changes
+1. **DO NOT start a new feature**
+2. Read the last progress entry to understand what happened
+3. Check git log for recent changes
+4. Fix the broken state first
+5. Commit the fix: `git commit -m "fix: [description of what was broken]"`
+6. Update progress.txt noting the fix
+7. THEN proceed to the next feature
 
-   # Commit with conventional format
-   git commit -m "$(cat <<'EOF'
-   feat(scope): description of what and why
+## Handling Blocked Features
 
-   Brief explanation if needed.
+If you cannot complete a feature due to external dependencies or unclear requirements:
 
-   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+1. Update progress.txt with status "blocked" and explain why
+2. Skip to the next feature by priority
+3. Do NOT mark the blocked feature as passing
 
-   Co-Authored-By: Claude <noreply@anthropic.com>
-   EOF
-   )"
-   ```
+## Example Session
 
-2. **Create Pull Request**
+```
+[Agent] Running orientation sequence...
 
-   ```bash
-   git push -u origin feature-branch-name
+> pwd
+/home/user/my-app
 
-   gh pr create --title "Feature: [Description]" --body "$(cat <<'EOF'
-   ## Summary
-   - What was built
-   - Why it was needed
-   - Key decisions made
-
-   ## Testing
-   - Tests added/modified
-   - Manual testing performed
-
-   ## Screenshots/Videos
-   [If UI changes]
-
-   ## Figma Design
-   [Link if applicable]
-
-   🤖 Generated with [Claude Code](https://claude.com/claude-code)
-   EOF
-   )"
-   ```
-
-3. **Notify User**
-   - Summarize what was completed
-   - Link to PR
-   - Note any follow-up work needed
-   - Suggest next steps if applicable
-
+> cat .claude/progress.txt | tail -20
+---
+Date: 2025-11-30T14:00:00Z
+Task: user-avatars
+Feature: ua-003 - Create upload endpoint
+Status: completed
+Next steps: ua-004 - Add image resizing
 ---
 
-## Key Principles
+> cat .claude/tasks/user-avatars.json | jq '...'
+Next incomplete: ua-004 (priority 4)
 
-### Start Fast, Execute Faster
+> ./.claude/init.sh
+✅ Development environment ready
 
-- Get clarification once at the start, then execute
-- Don't wait for perfect understanding - ask questions and move
-- The goal is to **finish the feature**, not create perfect process
+> curl http://localhost:3000/health
+{"status": "ok"}
 
-### The Plan is Your Guide
+[Agent] Working on: ua-004 - Add image resizing with Sharp
+Priority: 4
+Category: api
 
-- Work documents should reference similar code and patterns
-- Load those references and follow them
-- Don't reinvent - match what exists
+<implements image resizing>
+<tests with sample images>
+<verifies resized images are correct dimensions>
 
-### Test As You Go
+> git commit -m "feat(user-avatars): add image resizing with Sharp (ua-004)"
+> # Updates task JSON and progress.txt
 
-- Run tests after each change, not at the end
-- Fix failures immediately
-- Continuous testing prevents big surprises
-
-### Quality is Built In
-
-- Follow existing patterns
-- Write tests for new code
-- Run linting before pushing
-- Use reviewer agents for complex/risky changes only
-
-### Ship Complete Features
-
-- Mark all tasks completed before moving on
-- Don't leave features 80% done
-- A finished feature that ships beats a perfect feature that doesn't
+[Agent] Session complete.
+- Completed: ua-004
+- Remaining: 8 features
+- Next up: ua-005 - Store resized images in S3
+```
 
 ## Quality Checklist
 
-Before creating PR, verify:
+Before ending any session:
 
-- [ ] All clarifying questions asked and answered
-- [ ] All TodoWrite tasks marked completed
-- [ ] Tests pass (run `bin/rails test`)
-- [ ] Linting passes (use linting-agent)
-- [ ] Code follows existing patterns
-- [ ] Figma designs match implementation (if applicable)
-- [ ] Commit messages follow conventional format
-- [ ] PR description includes summary and testing notes
+- [ ] Feature implementation complete
+- [ ] All tests pass
+- [ ] Changes committed with descriptive message
+- [ ] Task JSON updated (passes: true)
+- [ ] Progress file updated with session entry
+- [ ] State updates committed
+- [ ] Dev server runs cleanly
 
-## When to Use Reviewer Agents
+## Key Principles
 
-**Don't use by default.** Use reviewer agents only when:
+### Incremental Progress
+One feature at a time prevents half-implemented chaos. Complete, test, commit, repeat.
 
-- Large refactor affecting many files (10+)
-- Security-sensitive changes (authentication, permissions, data access)
-- Performance-critical code paths
-- Complex algorithms or business logic
-- User explicitly requests thorough review
+### Structured Handoff
+JSON + progress file enables seamless session transitions. The next session picks up exactly where this one left off.
 
-For most features: tests + linting + following patterns is sufficient.
+### Forced Verification
+Features must be tested E2E before marking complete. Code inspection is not verification.
 
-## Common Pitfalls to Avoid
-
-- **Analysis paralysis** - Don't overthink, read the plan and execute
-- **Skipping clarifying questions** - Ask now, not after building wrong thing
-- **Ignoring plan references** - The plan has links for a reason
-- **Testing at the end** - Test continuously or suffer later
-- **Forgetting TodoWrite** - Track progress or lose track of what's done
-- **80% done syndrome** - Finish the feature, don't move on early
-- **Over-reviewing simple changes** - Save reviewer agents for complex work
+### Clean State
+Every session ends with committed, working code. No dangling changes, no broken builds.

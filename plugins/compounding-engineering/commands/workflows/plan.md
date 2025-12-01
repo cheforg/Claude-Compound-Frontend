@@ -422,3 +422,93 @@ When user selects "Create Issue", detect their project tracker from CLAUDE.md:
    - Ask if they want to proceed to `/work` or `/plan_review`
 
 NEVER CODE! Just research and write the plan.
+
+## Additional Step: Create Task Feature File
+
+After creating the GitHub issue (or if the user chooses to start `/work`), also create a structured JSON file for tracking sub-features.
+
+### Generate Feature Breakdown
+
+Based on the feature description and your research, break it down into 10-30 granular sub-features. Each sub-feature should be:
+- Completable in a single focused session (30-60 minutes of work)
+- Independently testable
+- Ordered by dependency (infrastructure first, then features, then polish)
+
+### Create the Task File
+
+Create `.claude/tasks/[task-slug].json` with this structure:
+
+```json
+{
+  "_warning": "DO NOT modify feature descriptions or delete features. Only change 'passes' from false to true after verification.",
+  "task_id": "[task-slug]",
+  "title": "[Feature title from user input]",
+  "github_issue": "#[issue-number]",
+  "created_at": "[ISO timestamp]",
+  "status": "in-progress",
+  "features": [
+    {
+      "id": "[task-slug]-001",
+      "category": "[infrastructure|state|ui|api|testing|reliability|docs]",
+      "description": "[Clear, specific description of this sub-feature]",
+      "steps": [
+        "[Step 1 to verify this works]",
+        "[Step 2 to verify this works]",
+        "[Step 3 to verify this works]"
+      ],
+      "passes": false,
+      "priority": 1
+    },
+    {
+      "id": "[task-slug]-002",
+      "category": "...",
+      "description": "...",
+      "steps": ["..."],
+      "passes": false,
+      "priority": 2
+    }
+  ]
+}
+```
+
+### Feature Categories
+
+Use these categories to organize features:
+
+- `infrastructure` - Setup, connections, core services (do these FIRST)
+- `api` - Backend endpoints, data fetching
+- `state` - State management, stores, data flow
+- `ui` - User interface components
+- `reliability` - Error handling, edge cases, reconnection
+- `testing` - Unit tests, integration tests, E2E tests (do these LAST)
+- `docs` - Documentation, comments, README updates
+
+### Priority Rules
+
+1. Infrastructure and setup features come first (priority 1-5)
+2. Core functionality comes next (priority 6-15)
+3. UI and polish features follow (priority 16-25)
+4. Testing and docs come last (priority 26+)
+
+### Commit the Task File
+
+```bash
+git add .claude/tasks/[task-slug].json
+git commit -m "plan: create feature breakdown for [task-slug]
+
+Breaks down #[issue-number] into [N] trackable sub-features.
+See .claude/tasks/[task-slug].json for full breakdown."
+```
+
+### Output to User
+
+After creating both the GitHub issue and the task file, inform the user:
+
+"Created GitHub issue #[N] and feature breakdown with [X] sub-features.
+
+To start working on this feature:
+```
+claude /compounding-engineering:work [task-slug]
+```
+
+The agent will work through each sub-feature incrementally, testing and committing as it goes."

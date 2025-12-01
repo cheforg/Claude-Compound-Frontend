@@ -5,6 +5,39 @@ All notable changes to the compounding-engineering plugin will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.0] - 2025-12-01
+
+### Added
+
+- **Long-Running Agent Support** - Implements best practices from [Anthropic's research on effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents). Enables AI agents to work effectively across multiple sessions with structured persistence.
+
+- **`/work-init` command** - Initialize Claude agent environment for a project (run once per repo). Creates `.claude/progress.txt` for session continuity, `.claude/init.sh` for dev environment startup, and `.claude/tasks/` directory for feature tracking.
+
+- **`/task-status` command** - Show progress on tasks. Displays completion percentage, lists completed and remaining features, and shows next steps.
+
+- **`e2e-test-verifier` agent** - Verifies features work end-to-end using browser automation (Playwright MCP). Ensures features are tested as users would experience them before marking complete.
+
+- **`clean-state-verifier` agent** - Ensures the environment is in a clean state before ending a session. Verifies no uncommitted changes, progress file updated, tests pass, and dev server starts clean.
+
+- **Templates** - Added `templates/` directory with:
+  - `task-template.json` - Example task file structure
+  - `progress-template.txt` - Progress log template with format guide
+  - `init-nodejs.sh` - Node.js dev environment startup script
+  - `init-python.sh` - Python dev environment startup script
+
+### Changed
+
+- **`/work` command** - Completely rewritten for incremental progress. Now works through task JSON files one sub-feature at a time, with forced verification before marking complete.
+
+- **`/plan` command** - Now generates task JSON files (`.claude/tasks/[task-slug].json`) with 10-30 granular sub-features for tracking progress.
+
+### Key Principles
+
+- **Incremental progress**: One feature at a time prevents half-implemented chaos
+- **Structured handoff**: JSON + progress file enables seamless session transitions
+- **Forced verification**: Features must be tested E2E before marking complete
+- **Clean state**: Every session ends with committed, working code
+
 ## [2.8.3] - 2025-11-29
 
 ### Fixed
