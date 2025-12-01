@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(./.claude/init.sh)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
