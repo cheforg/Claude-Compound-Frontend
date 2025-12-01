@@ -5,6 +5,14 @@ All notable changes to the compounding-engineering plugin will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-12-01
+
+### Changed
+
+- **README rewritten for copy/clone workflow** - The README now documents using this as a standalone workflow system by copying files into your project, rather than installing as a Claude Code plugin. This reflects how most users actually adopt the workflow.
+
+- **Simplified installation** - Instead of `claude /plugin install`, users now copy `commands/workflows/` into their project's `.claude/commands/` directory.
+
 ## [2.9.0] - 2025-12-01
 
 ### Added
