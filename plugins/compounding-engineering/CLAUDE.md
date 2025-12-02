@@ -1,47 +1,27 @@
-# Compounding Engineering Plugin Development
+# Compounding Engineering Workflow
 
-## Versioning Requirements
+This is a Claude Code workflow system. Clone and use directly.
 
-**IMPORTANT**: Every change to this plugin MUST include updates to all three files:
-
-1. **`.claude-plugin/plugin.json`** - Bump version using semver
-2. **`CHANGELOG.md`** - Document changes using Keep a Changelog format
-3. **`README.md`** - Verify/update component counts and tables
-
-### Version Bumping Rules
-
-- **MAJOR** (1.0.0 → 2.0.0): Breaking changes, major reorganization
-- **MINOR** (1.0.0 → 1.1.0): New agents, commands, or skills
-- **PATCH** (1.0.0 → 1.0.1): Bug fixes, doc updates, minor improvements
-
-### Pre-Commit Checklist
-
-Before committing ANY changes:
-
-- [ ] Version bumped in `.claude-plugin/plugin.json`
-- [ ] CHANGELOG.md updated with changes
-- [ ] README.md component counts verified
-- [ ] README.md tables accurate (agents, commands, skills)
-- [ ] plugin.json description matches current counts
-
-### Directory Structure
+## Structure
 
 ```
-agents/
-├── review/     # Code review agents
-├── research/   # Research and analysis agents
-├── design/     # Design and UI agents
-├── workflow/   # Workflow automation agents
-└── docs/       # Documentation agents
-
-commands/
-├── workflows/  # Core workflow commands (/plan, /review, /work, /compound)
-└── *.md        # Utility commands
-
-skills/
-└── *.md        # All skills at root level
+.claude/
+├── commands/       # Slash commands (type / to see them)
+│   └── workflows/  # Core: plan, work, review, compound
+├── agents/         # Specialized agents
+├── skills/         # Domain knowledge
+├── settings.json   # MCP servers (Playwright, Context7)
+├── progress.txt    # Session log
+└── tasks/          # Task tracking
 ```
 
-## Documentation
+## Core Workflow
 
-See `docs/solutions/plugin-versioning-requirements.md` for detailed versioning workflow.
+1. **Plan**: `/workflows:plan <feature>` - Create structured task
+2. **Work**: `/workflows:work <task>` - Implement one feature at a time
+3. **Review**: `/workflows:review` - Multi-agent code review
+4. **Compound**: `/workflows:compound` - Document solved problems
+
+## Philosophy
+
+Each unit of work makes the next one easier. Document solutions. Codify patterns. Never solve the same problem twice.

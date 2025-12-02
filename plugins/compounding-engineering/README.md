@@ -1,206 +1,113 @@
-# Compounding Engineering
+# Compounding Engineering Workflow
 
-A workflow system for Claude Code that enables long-running, multi-session development. Each unit of work makes the next one easier.
-
-## The Problem
-
-AI agents working on complex tasks face real challenges:
-
-- **Context limits** force work to span multiple sessions
-- **No memory** between sessions means starting over each time
-- **One-shot attempts** at complex features leave half-implemented code
-- **Premature victory** declarations leave bugs undiscovered
-
-## The Solution
-
-A structured workflow with persistent state:
-
-```
-your-project/
-├── .claude/
-│   ├── progress.txt       # Append-only session log
-│   ├── init.sh            # Dev environment startup
-│   └── tasks/
-│       └── feature.json   # Feature breakdown with pass/fail tracking
-```
+A Claude Code workflow system for long-running, multi-session development. Clone it, use it.
 
 ## Quick Start
 
-### 1. Copy the Workflow Files
-
-Clone or copy the `commands/workflows/` directory into your project:
-
 ```bash
-# From this repo
-cp -r commands/workflows/ /path/to/your-project/.claude/commands/workflows/
-```
-
-### 2. Initialize Your Project
-
-```bash
-cd /path/to/your-project
+git clone https://github.com/YOUR_ORG/compounding-engineering-workflow.git
+cd compounding-engineering-workflow
 claude
 ```
 
-Then run:
-```
-/workflows:work-init
-```
+Then type `/workflows:` and you'll see all available commands.
 
-This creates:
-- `.claude/progress.txt` - Session log for continuity
-- `.claude/init.sh` - Environment startup script
-- `.claude/tasks/` - Directory for task tracking
-
-### 3. Plan a Feature
-
-```
-/workflows:plan Add user authentication with OAuth
-```
-
-Creates a structured task file with sub-features, priorities, and acceptance criteria.
-
-### 4. Work Incrementally
-
-```
-/workflows:work user-authentication
-```
-
-Each session:
-1. Reads progress to understand context
-2. Picks ONE sub-feature to implement
-3. Tests end-to-end before marking complete
-4. Commits and updates progress
-
-### 5. Review When Done
-
-```
-/workflows:review
-```
-
-Multi-agent code review with architecture, security, and pattern analysis.
-
-## Core Workflow Commands
+## Core Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/workflows:work-init` | Initialize project for long-running work |
 | `/workflows:plan` | Create structured task plans |
 | `/workflows:work` | Make incremental progress on tasks |
-| `/workflows:review` | Comprehensive code review |
+| `/workflows:work-init` | Initialize long-running task support |
+| `/workflows:review` | Multi-agent code review |
 | `/workflows:compound` | Document solved problems |
 
 ## How It Works
 
 ### Session Continuity
 
-Every session appends to `progress.txt`:
+The `/workflows:work-init` command creates:
 
 ```
----
-Date: 2025-12-01T14:00:00Z
-Task: user-auth
-Feature: auth-003 - Add OAuth callback handler
-Status: completed
-Changes:
-- Implemented OAuth callback endpoint
-- Added session token generation
-- Tested with Google OAuth
-Git commits: abc123
-Next steps: auth-004 - Add logout endpoint
-Issues: None
----
+.claude/
+├── progress.txt    # Append-only session log
+├── init.sh         # Dev environment startup
+└── tasks/          # Task tracking files
 ```
 
-The next session reads this log and picks up exactly where you left off.
+Each session appends to `progress.txt`, so the next session picks up where you left off.
 
-### Task Tracking
+### Incremental Work
 
-Features are tracked in JSON with pass/fail status:
+The `/workflows:work` command:
 
-```json
-{
-  "task": "user-auth",
-  "features": [
-    {
-      "id": "auth-001",
-      "description": "Add login button to header",
-      "priority": 1,
-      "passes": true
-    },
-    {
-      "id": "auth-002",
-      "description": "Create OAuth redirect endpoint",
-      "priority": 2,
-      "passes": false
-    }
-  ]
-}
-```
+1. Reads progress to understand context
+2. Picks ONE sub-feature to implement
+3. Tests end-to-end before marking complete
+4. Commits and updates progress
 
-### Key Principles
+No more half-implemented features or broken builds between sessions.
 
-**Incremental Progress**: One feature at a time prevents half-implemented chaos.
+## What's Included
 
-**Forced Verification**: Features must be tested E2E before marking complete.
+### Commands (21)
 
-**Clean State**: Every session ends with committed, working code.
+All in `.claude/commands/`:
 
-**Structured Handoff**: JSON + progress file enables seamless transitions.
-
-## Additional Components
-
-This repo also includes agents, skills, and MCP server configs that enhance the workflow:
+- **Workflow**: plan, work, work-init, review, compound, task-status
+- **Parallel resolution**: resolve_parallel, resolve_pr_parallel, resolve_todo_parallel
+- **Utilities**: changelog, triage, report-bug, reproduce-bug, and more
 
 ### Agents (26)
 
-Specialized agents for code review, research, and automation. See `agents/` for the full list.
+Specialized agents in `.claude/agents/` for:
+
+- **Review**: architecture, security, performance, Rails/Python/TypeScript conventions
+- **Research**: best practices, framework docs, git history analysis
+- **Design**: Figma sync, design iteration, implementation review
+- **Workflow**: bug reproduction, PR comment resolution, spec analysis
 
 ### Skills (11)
 
-Domain-specific knowledge including Ruby gem patterns, frontend design, and style guides. See `skills/` for details.
+Domain knowledge in `.claude/skills/`:
+
+- Ruby gem patterns (Andrew Kane style, DHH style)
+- Frontend design
+- DSPy.rb for LLM applications
+- Image generation (Gemini)
+- Git worktree management
 
 ### MCP Servers (2)
 
-Browser automation (Playwright) and documentation lookup (Context7). Add to your `.claude/settings.json`:
+Pre-configured in `.claude/settings.json`:
 
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
-    },
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp"
-    }
-  }
-}
-```
+- **Playwright**: Browser automation for E2E testing
+- **Context7**: Framework documentation lookup
+
+## Philosophy
+
+**Compounding Engineering**: Each unit of work should make subsequent work easier.
+
+When you solve a problem, document it with `/workflows:compound`. When you find a pattern, codify it. Never solve the same problem twice.
 
 ## Directory Structure
 
 ```
-compounding-engineering/
-├── commands/
-│   └── workflows/      # Core workflow commands (copy these)
-│       ├── work-init.md
-│       ├── plan.md
-│       ├── work.md
-│       ├── review.md
-│       └── compound.md
+.claude/
+├── commands/           # Slash commands
+│   ├── workflows/      # Core workflow commands
+│   └── *.md            # Utility commands
 ├── agents/             # Specialized agents
+│   ├── review/
+│   ├── research/
+│   ├── design/
+│   ├── workflow/
+│   └── docs/
 ├── skills/             # Domain knowledge
-└── templates/          # Task templates
+├── settings.json       # MCP server config
+├── progress.txt        # Session log (created by work-init)
+└── tasks/              # Task files (created by plan)
 ```
-
-## Philosophy
-
-**Compounding Engineering**: Each unit of work should make subsequent work easier, not harder.
-
-When you solve a problem, document it. When you find a pattern, codify it. The `/compound` command captures solutions so you never solve the same problem twice.
 
 ## License
 
