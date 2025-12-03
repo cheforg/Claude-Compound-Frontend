@@ -7,7 +7,6 @@ This is a Claude Code workflow system. Clone and use directly.
 ```
 .claude/
 ├── commands/       # Slash commands (type / to see them)
-│   └── workflows/  # Core: plan, work, review, compound
 ├── agents/         # Specialized agents
 ├── skills/         # Domain knowledge
 ├── settings.json   # MCP servers (Playwright, Context7)
@@ -17,10 +16,10 @@ This is a Claude Code workflow system. Clone and use directly.
 
 ## Core Workflow
 
-1. **Plan**: `/workflows:plan <feature>` - Create structured task
-2. **Work**: `/workflows:work <task>` - Implement one feature at a time
-3. **Review**: `/workflows:review` - Multi-agent code review
-4. **Compound**: `/workflows:compound` - Document solved problems
+1. **Plan**: `/plan <feature>` - Create structured task
+2. **Work**: `/work <task>` - Implement one feature at a time
+3. **Review**: `/review` - Multi-agent code review
+4. **Compound**: `/compound` - Document solved problems
 
 ## Philosophy
 
